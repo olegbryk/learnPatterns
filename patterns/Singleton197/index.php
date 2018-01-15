@@ -2,45 +2,27 @@
     Singleton
 </h1>
 <?php
-abstract class lesson{
-    protected $duration;
+abstract class Lesson{
+    private $duration;
+    private $costStrategy;
     const FIXED =1;
     const TIMED =2;
-    private $costtype;
-    public function __construct ($duration, $costtype = self::FIXED){
+    public function __construct ($duration, CostStrategy $strategy){
         $this->duration = $duration;
-        $this->costtype = $costtype;
+        $this->costStrategy = $strategy;
 
     }
     public function cost(){
-            switch ($this->costtype){
-                CASE self::TIMED :
-                    return (5 *$this->duration);
-                    break;
-                CASE self::FIXED:
-                    return 30;
-                    break;
-                default:
-                    $this->costtype = self::FIXED;
-                    return 30;
-            }
+        return $this->costStrategy->cost($this);
     }
 
     public function chargeType(){
-        switch ($this->costtype){
-            CASE self::TIMED:
-                return "Погодинна оплата";
-                break;
-            break;
-            CASE self::FIXED:
-                return "Фіксована оплата";
-                break;
-            default:
-                $this->costtype = self::FIXED;
-                return "Фіксована оплата";
-
-        }
+        return $this->costStrategy->chargeType();
     }
+    public function  getDuration(){
+        return $this->duration;
+    }
+
 }
 
 class Lecture extends Lesson{
@@ -50,8 +32,38 @@ class Lecture extends Lesson{
 class Seminar extends Lesson{
 
 }
-$lecture = new Lecture(5,Lesson::FIXED);
-$seminar = new Seminar(3,Lesson::TIMED);
-print "{$lecture->cost()} ({$lecture->chargeType()})/<br/>";
-print "{$seminar->cost()} ({$seminar->chargeType()})/<br/>";
+
+abstract class CostStrategy{
+    abstract function cost(Lesson $lesson);
+    abstract function chargeType();
+}
+
+class FixedCostStrategy extends CostStrategy{
+    function cost(Lesson $lesson)
+    {
+        return 30;
+    }
+    function chargeType()
+    {
+       return "Фіксована ставка";
+    }
+}
+
+class TimeCostStrategy extends CostStrategy{
+    function chargeType()
+    {
+       return "Погодинна оплата";
+    }
+    function cost(Lesson $lesson)
+    {
+        return $lesson->getDuration()*5;
+    }
+}
+
+$lessons[] = new Seminar(4,new TimeCostStrategy());
+$lessons[] = new Lecture(3,new FixedCostStrategy());
+foreach ($lessons as $lesson){
+    print "Оплата за урок: {$lesson->cost()}.";
+    print "Тип оплати: {$lesson->chargeType()}.<br>";
+}
 ?>
